@@ -4,15 +4,15 @@ from address_converter import (evm_to_tron, get_address_type, tron_to_evm,
                                validate_tron_base58_address,
                                validate_tron_hex_address)
 
-# 有效的测试地址
+# Valid test addresses
 VALID_EVM_ADDRESS = "0x123456789abcdef123456789abcdef123456789a"
 VALID_TRON_BASE58 = "TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW"
 VALID_TRON_HEX = "41123456789abcdef123456789abcdef123456789a"
 
 
-# 基本功能测试
+# Basic functionality tests
 def test_evm_to_tron_base58():
-    """测试EVM地址转波场Base58格式"""
+    """Test converting EVM address to TRON Base58 format"""
     tron_address = evm_to_tron(VALID_EVM_ADDRESS, output_format="base58")
     assert isinstance(tron_address, str)
     assert tron_address.startswith("T")
@@ -20,7 +20,7 @@ def test_evm_to_tron_base58():
 
 
 def test_evm_to_tron_hex():
-    """测试EVM地址转波场Hex格式"""
+    """Test converting EVM address to TRON hex format"""
     tron_address = evm_to_tron(VALID_EVM_ADDRESS, output_format="hex")
     assert isinstance(tron_address, str)
     assert tron_address.startswith("41")
@@ -28,19 +28,19 @@ def test_evm_to_tron_hex():
 
 
 def test_tron_to_evm():
-    """测试波场地址转EVM格式"""
+    """Test converting TRON address to EVM format"""
     evm_address = tron_to_evm(VALID_TRON_BASE58)
     assert isinstance(evm_address, str)
     assert evm_address.startswith("0x")
     assert len(evm_address) == 42
 
 
-# 参数化测试：地址类型检测
+# Parameterized tests: address type detection
 @pytest.mark.parametrize(
     "address,expected_type",
     [
         (VALID_EVM_ADDRESS, "evm"),
-        ("123456789abcdef123456789abcdef123456789a", "evm"),  # 无前缀EVM地址
+        ("123456789abcdef123456789abcdef123456789a", "evm"),  # Unprefixed EVM address
         (VALID_TRON_BASE58, "tron_base58"),
         (VALID_TRON_HEX, "tron_hex"),
         ("invalid_address", None),
@@ -49,43 +49,43 @@ def test_tron_to_evm():
     ],
 )
 def test_address_type_detection(address, expected_type):
-    """测试地址类型检测功能"""
+    """Test address type detection functionality"""
     assert get_address_type(address) == expected_type
 
 
-# 参数化测试：无效输入处理
+# Parameterized tests: invalid input handling
 @pytest.mark.parametrize(
     "invalid_address,expected_error",
     [
-        ("0x123", "Invalid EVM address length"),  # 地址太短
-        ("0xGGGG", "Invalid hex characters"),  # 非法字符
-        (None, "Address must be a string"),  # 非字符串输入
-        ("", "Empty address"),  # 空地址
-        (" ", "Empty address"),  # 空白地址
+        ("0x123", "Invalid EVM address length"),  # Address too short
+        ("0xGGGG", "Invalid hex characters"),  # Invalid characters
+        (None, "Address must be a string"),  # Non-string input
+        ("", "Empty address"),  # Empty address
+        (" ", "Empty address"),  # Blank address
     ],
 )
 def test_invalid_inputs(invalid_address, expected_error):
-    """测试无效输入的错误处理"""
+    """Test handling of invalid inputs"""
     with pytest.raises(ValueError, match=expected_error):
         evm_to_tron(invalid_address)
 
 
-# 双向转换一致性测试
+# Bidirectional conversion consistency tests
 @pytest.mark.parametrize(
     "original_address",
     [
         VALID_EVM_ADDRESS,
-        "0X123456789ABCDEF123456789ABCDEF123456789A",  # 大写地址
-        "123456789abcdef123456789abcdef123456789a",  # 无前缀地址
+        "0X123456789ABCDEF123456789ABCDEF123456789A",  # Uppercase address
+        "123456789abcdef123456789abcdef123456789a",  # Unprefixed address
     ],
 )
 def test_bidirectional_conversion(original_address):
-    """测试地址转换的双向一致性"""
+    """Test bidirectional consistency of address conversion"""
     # EVM -> TRON -> EVM
     tron_address = evm_to_tron(original_address)
     converted_back = tron_to_evm(tron_address)
 
-    # 移除0x前缀后比较
+    # Compare after removing 0x prefix
     assert converted_back.lower().replace("0x", "") == original_address.lower().replace(
         "0x", ""
     )
@@ -96,39 +96,39 @@ def test_bidirectional_conversion(original_address):
     assert converted_back == VALID_TRON_BASE58
 
 
-# 格式选项测试
+# Format options tests
 def test_format_options():
-    """测试不同的格式选项"""
-    # 测试output_format选项
+    """Test different format options"""
+    # Test output_format option
     with pytest.raises(ValueError, match="output_format must be 'base58' or 'hex'"):
         evm_to_tron(VALID_EVM_ADDRESS, output_format="invalid")
 
-    # 测试add_prefix选项
+    # Test add_prefix option
     assert not tron_to_evm(VALID_TRON_BASE58, add_prefix=False).startswith("0x")
     assert tron_to_evm(VALID_TRON_BASE58, add_prefix=True).startswith("0x")
 
 
-# 地址验证测试
+# Address validation tests
 def test_address_validation():
-    """测试地址验证功能"""
-    # Base58地址验证
+    """Test address validation functionality"""
+    # Base58 address validation
     assert validate_tron_base58_address(VALID_TRON_BASE58)
-    assert not validate_tron_base58_address("T" + "1" * 33)  # 无效的Base58地址
+    assert not validate_tron_base58_address("T" + "1" * 33)  # Invalid Base58 address
 
-    # Hex地址验证
+    # Hex address validation
     assert validate_tron_hex_address(VALID_TRON_HEX)
-    assert not validate_tron_hex_address("42" + "1" * 40)  # 无效的前缀
-    assert not validate_tron_hex_address("41" + "1" * 39)  # 无效的长度
+    assert not validate_tron_hex_address("42" + "1" * 40)  # Invalid prefix
+    assert not validate_tron_hex_address("41" + "1" * 39)  # Invalid length
 
 
-# 大小写处理测试
+# Case handling tests
 def test_case_handling():
-    """测试地址大小写处理"""
+    """Test case handling"""
     upper_evm = VALID_EVM_ADDRESS.upper()
     lower_evm = VALID_EVM_ADDRESS.lower()
 
-    # 确保大小写输入得到相同结果
+    # Ensure case-insensitive input yields the same result
     assert evm_to_tron(upper_evm) == evm_to_tron(lower_evm)
 
-    # 确保输出的EVM地址始终是小写的
+    # Ensure output EVM address is always lowercase
     assert tron_to_evm(VALID_TRON_BASE58) == tron_to_evm(VALID_TRON_BASE58).lower()

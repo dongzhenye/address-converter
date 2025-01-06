@@ -4,16 +4,16 @@ from base58 import b58decode_check, b58encode_check
 
 
 def normalize_evm_address(evm_address: str) -> str:
-    """规范化EVM地址格式
+    """Normalize EVM address format.
 
     Args:
-        evm_address: 0x开头或纯hex的EVM地址
+        evm_address: EVM address with or without '0x' prefix
 
     Returns:
-        规范化的EVM地址(小写,不含0x前缀)
+        str: Normalized EVM address (lowercase, without '0x' prefix)
 
     Raises:
-        ValueError: 当地址格式无效时
+        ValueError: If the address format is invalid
     """
     if not isinstance(evm_address, str):
         raise ValueError("Address must be a string")
@@ -21,16 +21,16 @@ def normalize_evm_address(evm_address: str) -> str:
     if not evm_address or evm_address.isspace():
         raise ValueError("Empty address")
 
-    # 移除0x前缀和空格,转小写
+    # Remove 0x prefix, spaces and convert to lowercase
     norm_address = evm_address.lower().replace("0x", "").strip()
 
-    # 先检查是否为有效的16进制字符串
+    # First check if it's a valid hex string
     try:
         int(norm_address, 16)
     except ValueError:
         raise ValueError("Invalid hex characters in EVM address")
 
-    # 再检查长度
+    # Then check the length
     if len(norm_address) != 40:
         raise ValueError(
             f"Invalid EVM address length: {len(norm_address)}, expected 40"
@@ -40,13 +40,13 @@ def normalize_evm_address(evm_address: str) -> str:
 
 
 def validate_tron_base58_address(address: str) -> bool:
-    """验证波场Base58Check格式地址
+    """Validate TRON address in Base58Check format.
 
     Args:
-        address: 待验证的Base58Check格式地址
+        address: TRON address in Base58Check format
 
     Returns:
-        bool: 地址是否有效
+        bool: True if the address is valid, False otherwise
     """
     if not isinstance(address, str):
         return False
@@ -62,18 +62,18 @@ def validate_tron_base58_address(address: str) -> bool:
 
 
 def validate_tron_hex_address(address: str) -> bool:
-    """验证波场Hex格式地址
+    """Validate TRON address in hex format.
 
     Args:
-        address: 待验证的Hex格式地址
+        address: TRON address in hex format
 
     Returns:
-        bool: 地址是否有效
+        bool: True if the address is valid, False otherwise
     """
     if not isinstance(address, str):
         return False
 
-    # 移除0x前缀和空格
+    # Remove 0x prefix and spaces
     norm_address = address.lower().replace("0x", "").strip()
 
     if not norm_address.startswith("41"):
@@ -90,17 +90,17 @@ def validate_tron_hex_address(address: str) -> bool:
 
 
 def evm_to_tron(evm_address: str, output_format: str = "base58") -> str:
-    """将EVM地址转换为波场地址
+    """Convert EVM address to TRON format.
 
     Args:
-        evm_address: 0x开头或纯hex的EVM地址
-        output_format: 输出格式,'base58'或'hex'
+        evm_address: EVM address with or without '0x' prefix
+        output_format: Output format, either 'base58' or 'hex'
 
     Returns:
-        波场地址(Base58Check格式或Hex格式)
+        str: TRON address in specified format
 
     Raises:
-        ValueError: 当地址格式无效或output_format无效时
+        ValueError: If the address format is invalid or output_format is invalid
     """
     if output_format not in ["base58", "hex"]:
         raise ValueError("output_format must be 'base58' or 'hex'")
@@ -124,17 +124,17 @@ def evm_to_tron(evm_address: str, output_format: str = "base58") -> str:
 
 
 def tron_to_evm(tron_address: str, add_prefix: bool = True) -> str:
-    """将波场地址转换为EVM地址
+    """Convert TRON address to EVM format.
 
     Args:
-        tron_address: T开头的Base58Check格式地址或41开头的Hex格式地址
-        add_prefix: 是否添加0x前缀
+        tron_address: TRON address in Base58Check format or hex format
+        add_prefix: Whether to add '0x' prefix to the result
 
     Returns:
-        EVM地址(可选0x前缀)
+        str: EVM address (with or without '0x' prefix)
 
     Raises:
-        ValueError: 当地址格式无效时
+        ValueError: If the address format is invalid
     """
     if not isinstance(tron_address, str):
         raise ValueError("Address must be a string")
@@ -166,13 +166,13 @@ def tron_to_evm(tron_address: str, add_prefix: bool = True) -> str:
 
 
 def get_address_type(address: str) -> Optional[str]:
-    """识别地址类型
+    """Detect address type.
 
     Args:
-        address: 待识别的地址
+        address: Address to detect
 
     Returns:
-        str: 地址类型 ('evm', 'tron_base58', 'tron_hex', None)
+        Optional[str]: Address type ('evm', 'tron_base58', 'tron_hex', or None if invalid)
     """
     if not isinstance(address, str) or not address:
         return None
@@ -180,20 +180,23 @@ def get_address_type(address: str) -> Optional[str]:
     address = address.strip()
 
     try:
-        # 检查是否为EVM地址
+        # Remove 0x prefix and spaces
+        norm_address = address.lower().replace("0x", "").strip()
+
+        # Check if it's an EVM address
         if address.startswith("0x"):
             normalize_evm_address(address)
             return "evm"
 
-        # 检查是否为波场Base58Check地址
+        # Check if it's a TRON Base58Check address
         if validate_tron_base58_address(address):
             return "tron_base58"
 
-        # 检查是否为波场Hex地址
+        # Check if it's a TRON hex address
         if validate_tron_hex_address(address):
             return "tron_hex"
 
-        # 检查是否为不带0x前缀的EVM地址
+        # Check if it's an EVM address without 0x prefix
         if len(address) == 40:
             normalize_evm_address(address)
             return "evm"
