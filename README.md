@@ -76,11 +76,13 @@ Detect address type.
 ## Address Format Details
 
 ### EVM Address
+
 - 40 hexadecimal characters (excluding '0x' prefix)
 - Case-insensitive
 - Optional '0x' prefix
 
 ### TRON Address
+
 - Base58Check format: Starts with 'T', 34 characters
 - Hex format: Starts with '41', 42 characters (excluding '0x' prefix)
 
@@ -106,10 +108,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 If you have any questions or need help, please:
+
 1. Check the [issues](https://github.com/dongzhenye/address-converter/issues) page
 2. Create a new issue if you can't find an answer
 
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=dongzhenye/address-converter&type=Date)](https://star-history.com/#dongzhenye/address-converter&Date)
-
