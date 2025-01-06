@@ -174,32 +174,31 @@ def get_address_type(address: str) -> Optional[str]:
     Returns:
         Optional[str]: Address type ('evm', 'tron_base58', 'tron_hex', or None if invalid)
     """
-    if not isinstance(address, str) or not address:
+    if not isinstance(address, str):
         return None
 
     address = address.strip()
+    if not address:
+        return None
 
     try:
-        # Remove 0x prefix and spaces
+        # Remove 0x prefix for consistent checking
         norm_address = address.lower().replace("0x", "").strip()
 
-        # Check if it's an EVM address
-        if address.startswith("0x"):
-            normalize_evm_address(address)
-            return "evm"
+        # Check if it's a TRON hex address first
+        if norm_address.startswith("41") and len(norm_address) == 42:
+            if validate_tron_hex_address(norm_address):
+                return "tron_hex"
 
         # Check if it's a TRON Base58Check address
         if validate_tron_base58_address(address):
             return "tron_base58"
 
-        # Check if it's a TRON hex address
-        if validate_tron_hex_address(address):
-            return "tron_hex"
-
-        # Check if it's an EVM address without 0x prefix
-        if len(address) == 40:
+        # Check if it's an EVM address (with or without 0x prefix)
+        if len(norm_address) == 40:
             normalize_evm_address(address)
             return "evm"
+
     except ValueError:
         pass
 

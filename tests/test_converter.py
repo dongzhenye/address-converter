@@ -132,3 +132,145 @@ def test_case_handling():
 
     # Ensure output EVM address is always lowercase
     assert tron_to_evm(VALID_TRON_BASE58) == tron_to_evm(VALID_TRON_BASE58).lower()
+
+
+# 添加新的测试用例
+def test_base58_decode_errors():
+    """Test Base58 decoding error handling"""
+    with pytest.raises(ValueError, match="Invalid TRON Base58Check address"):
+        tron_to_evm("T" + "I" * 33)  # 'I' is not a valid Base58 character
+    
+    with pytest.raises(ValueError, match="Invalid TRON Base58Check address"):
+        tron_to_evm("T" + "1" * 33)  # Invalid checksum
+
+
+@pytest.mark.parametrize(
+    "address,expected_type",
+    [
+        ("0x" + "0" * 40, "evm"),  # All zeros
+        ("0x" + "f" * 40, "evm"),  # All f's
+        ("41" + "0" * 40, "tron_hex"),  # All zeros after prefix
+        (None, None),  # None input
+        (123, None),  # Non-string input
+        (True, None),  # Boolean input
+        ("0x" + " " * 40, None),  # Spaces in address
+        ("41" + " " * 40, None),  # Spaces in TRON hex
+    ],
+)
+def test_address_type_edge_cases(address, expected_type):
+    """Test edge cases for address type detection"""
+    assert get_address_type(address) == expected_type
+
+
+def test_special_characters():
+    """Test handling of special characters in addresses"""
+    special_chars = [
+        "0x123\t456",  # Tab character
+        "0x123\n456",  # Newline character
+        "0x123\r456",  # Carriage return
+        "0x123 456",   # Space in middle
+        "0x123\u00A0456",  # Non-breaking space
+    ]
+    
+    for addr in special_chars:
+        with pytest.raises(ValueError):
+            evm_to_tron(addr)
+            
+        with pytest.raises(ValueError):
+            tron_to_evm(addr)
+
+
+def test_hex_validation_edge_cases():
+    """Test edge cases for hex address validation"""
+    # Test almost valid addresses
+    assert not validate_tron_hex_address("41" + "0" * 39)  # One character short
+    assert not validate_tron_hex_address("41" + "0" * 41)  # One character long
+    assert not validate_tron_hex_address("40" + "0" * 40)  # Wrong prefix
+    
+    # Test invalid hex characters
+    assert not validate_tron_hex_address("41" + "g" * 40)  # Invalid hex char
+    assert not validate_tron_hex_address("41" + "G" * 40)  # Invalid hex char
+
+
+def test_base58_validation_edge_cases():
+    """Test edge cases for Base58 address validation"""
+    # Test almost valid addresses
+    assert not validate_tron_base58_address("A" + "1" * 33)  # Wrong prefix
+    assert not validate_tron_base58_address("T" + "1" * 32)  # Too short
+    assert not validate_tron_base58_address("T" + "1" * 34)  # Too long
+    
+    # Test invalid Base58 characters
+    assert not validate_tron_base58_address("T" + "I" * 33)  # 'I' not in Base58
+    assert not validate_tron_base58_address("T" + "O" * 33)  # 'O' not in Base58
+
+
+def test_conversion_exceptions():
+    """Test exception handling in conversion functions"""
+    with pytest.raises(ValueError, match="Invalid hex characters in EVM address"):
+        evm_to_tron("0x" + "g" * 40)
+    
+    with pytest.raises(ValueError, match="Invalid TRON hex address"):
+        tron_to_evm("41" + "g" * 40)
+
+
+def test_get_address_type_comprehensive():
+    """Test comprehensive scenarios for address type detection"""
+    test_cases = [
+        # EVM address variations
+        ("0x" + "a" * 40, "evm"),
+        ("0x" + "A" * 40, "evm"),
+        ("0X" + "a" * 40, "evm"),
+        # TRON hex variations
+        ("41" + "a" * 40, "tron_hex"),
+        ("0x41" + "a" * 40, "tron_hex"),
+        # Invalid cases
+        ("0x" + "a" * 39, None),  # Too short EVM
+        ("0x" + "a" * 41, None),  # Too long EVM
+        ("42" + "a" * 40, None),  # Wrong TRON prefix
+        ("0x42" + "a" * 40, None),  # Wrong TRON prefix with 0x
+        # Special cases
+        (123.456, None),  # Float input
+        ([], None),  # List input
+        ({}, None),  # Dict input
+    ]
+    
+    for address, expected in test_cases:
+        assert get_address_type(address) == expected
+
+
+def test_validation_error_handling():
+    """Test error handling in validation functions"""
+    invalid_inputs = [
+        None,
+        123,
+        True,
+        [],
+        {},
+        "0x" + "g" * 40,  # Invalid hex chars
+        "41" + "g" * 40,  # Invalid hex chars in TRON address
+    ]
+    
+    for invalid_input in invalid_inputs:
+        assert not validate_tron_base58_address(invalid_input)
+        assert not validate_tron_hex_address(invalid_input)
+
+
+def test_get_address_type_edge_cases():
+    """Test edge cases for address type detection"""
+    edge_cases = [
+        ("0x" + "0" * 40, "evm"),  # All zeros
+        ("0X" + "F" * 40, "evm"),  # All F's with capital 0X
+        ("41" + "0" * 40, "tron_hex"),  # All zeros after prefix
+        ("0x41" + "0" * 40, "tron_hex"),  # TRON hex with 0x prefix
+        ("T" + "1" * 33, None),  # Invalid Base58
+        ("0x" + "g" * 40, None),  # Invalid hex chars
+        ("41" + "g" * 40, None),  # Invalid TRON hex
+        (" ", None),  # Just space
+        ("", None),  # Empty string
+        (None, None),  # None
+        (123, None),  # Integer
+        (True, None),  # Boolean
+    ]
+    
+    for address, expected in edge_cases:
+        assert get_address_type(address) == expected
