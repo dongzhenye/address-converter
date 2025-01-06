@@ -22,16 +22,16 @@ def normalize_evm_address(evm_address: str) -> str:
     # 移除0x前缀和空格,转小写
     norm_address = evm_address.lower().replace('0x', '').strip()
     
-    # 检查长度
-    if len(norm_address) != 40:
-        raise ValueError(f'Invalid EVM address length: {len(norm_address)}, expected 40')
-        
-    # 检查是否为有效的16进制字符串
+    # 先检查是否为有效的16进制字符串
     try:
         int(norm_address, 16)
     except ValueError:
         raise ValueError('Invalid hex characters in EVM address')
         
+    # 再检查长度
+    if len(norm_address) != 40:
+        raise ValueError(f'Invalid EVM address length: {len(norm_address)}, expected 40')
+    
     return norm_address
 
 def validate_tron_base58_address(address: str) -> bool:
