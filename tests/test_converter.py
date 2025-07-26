@@ -12,7 +12,7 @@ VALID_TRON_HEX = "41123456789abcdef123456789abcdef123456789a"
 
 # Basic functionality tests
 def test_evm_to_tron_base58():
-    """Test converting EVM address to TRON Base58 format"""
+    """Test converting EVM address to Base58 format"""
     tron_address = evm_to_tron(VALID_EVM_ADDRESS, output_format="base58")
     assert isinstance(tron_address, str)
     assert tron_address.startswith("T")
@@ -20,7 +20,7 @@ def test_evm_to_tron_base58():
 
 
 def test_evm_to_tron_hex():
-    """Test converting EVM address to TRON hex format"""
+    """Test converting EVM address to hex format"""
     tron_address = evm_to_tron(VALID_EVM_ADDRESS, output_format="hex")
     assert isinstance(tron_address, str)
     assert tron_address.startswith("41")
@@ -28,7 +28,7 @@ def test_evm_to_tron_hex():
 
 
 def test_tron_to_evm():
-    """Test converting TRON address to EVM format"""
+    """Test converting from alternative format to EVM format"""
     evm_address = tron_to_evm(VALID_TRON_BASE58)
     assert isinstance(evm_address, str)
     assert evm_address.startswith("0x")
@@ -81,7 +81,7 @@ def test_invalid_inputs(invalid_address, expected_error):
 )
 def test_bidirectional_conversion(original_address):
     """Test bidirectional consistency of address conversion"""
-    # EVM -> TRON -> EVM
+    # EVM -> Alternative -> EVM
     tron_address = evm_to_tron(original_address)
     converted_back = tron_to_evm(tron_address)
 
@@ -90,7 +90,7 @@ def test_bidirectional_conversion(original_address):
         "0x", ""
     )
 
-    # TRON -> EVM -> TRON
+    # Alternative -> EVM -> Alternative
     evm_address = tron_to_evm(VALID_TRON_BASE58)
     converted_back = evm_to_tron(evm_address)
     assert converted_back == VALID_TRON_BASE58
@@ -137,10 +137,10 @@ def test_case_handling():
 # 添加新的测试用例
 def test_base58_decode_errors():
     """Test Base58 decoding error handling"""
-    with pytest.raises(ValueError, match="Invalid TRON Base58Check address"):
+    with pytest.raises(ValueError, match="Invalid Base58Check address"):
         tron_to_evm("T" + "I" * 33)  # 'I' is not a valid Base58 character
     
-    with pytest.raises(ValueError, match="Invalid TRON Base58Check address"):
+    with pytest.raises(ValueError, match="Invalid Base58Check address"):
         tron_to_evm("T" + "1" * 33)  # Invalid checksum
 
 
@@ -154,7 +154,7 @@ def test_base58_decode_errors():
         (123, None),  # Non-string input
         (True, None),  # Boolean input
         ("0x" + " " * 40, None),  # Spaces in address
-        ("41" + " " * 40, None),  # Spaces in TRON hex
+        ("41" + " " * 40, None),  # Spaces in hex
     ],
 )
 def test_address_type_edge_cases(address, expected_type):
@@ -209,7 +209,7 @@ def test_conversion_exceptions():
     with pytest.raises(ValueError, match="Invalid hex characters in EVM address"):
         evm_to_tron("0x" + "g" * 40)
     
-    with pytest.raises(ValueError, match="Invalid TRON hex address"):
+    with pytest.raises(ValueError, match="Invalid hex address"):
         tron_to_evm("41" + "g" * 40)
 
 
@@ -226,8 +226,8 @@ def test_get_address_type_comprehensive():
         # Invalid cases
         ("0x" + "a" * 39, None),  # Too short EVM
         ("0x" + "a" * 41, None),  # Too long EVM
-        ("42" + "a" * 40, None),  # Wrong TRON prefix
-        ("0x42" + "a" * 40, None),  # Wrong TRON prefix with 0x
+        ("42" + "a" * 40, None),  # Wrong prefix
+        ("0x42" + "a" * 40, None),  # Wrong prefix with 0x
         # Special cases
         (123.456, None),  # Float input
         ([], None),  # List input
@@ -247,7 +247,7 @@ def test_validation_error_handling():
         [],
         {},
         "0x" + "g" * 40,  # Invalid hex chars
-        "41" + "g" * 40,  # Invalid hex chars in TRON address
+        "41" + "g" * 40,  # Invalid hex chars in address
     ]
     
     for invalid_input in invalid_inputs:
@@ -264,7 +264,7 @@ def test_get_address_type_edge_cases():
         ("0x41" + "0" * 40, "tron_hex"),  # TRON hex with 0x prefix
         ("T" + "1" * 33, None),  # Invalid Base58
         ("0x" + "g" * 40, None),  # Invalid hex chars
-        ("41" + "g" * 40, None),  # Invalid TRON hex
+        ("41" + "g" * 40, None),  # Invalid hex
         (" ", None),  # Just space
         ("", None),  # Empty string
         (None, None),  # None

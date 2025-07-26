@@ -40,10 +40,10 @@ def normalize_evm_address(evm_address: str) -> str:
 
 
 def validate_tron_base58_address(address: str) -> bool:
-    """Validate TRON address in Base58Check format.
+    """Validate address in Base58Check format.
 
     Args:
-        address: TRON address in Base58Check format
+        address: Address in Base58Check format
 
     Returns:
         bool: True if the address is valid, False otherwise
@@ -62,10 +62,10 @@ def validate_tron_base58_address(address: str) -> bool:
 
 
 def validate_tron_hex_address(address: str) -> bool:
-    """Validate TRON address in hex format.
+    """Validate address in hex format with specific prefix.
 
     Args:
-        address: TRON address in hex format
+        address: Address in hex format
 
     Returns:
         bool: True if the address is valid, False otherwise
@@ -90,14 +90,14 @@ def validate_tron_hex_address(address: str) -> bool:
 
 
 def evm_to_tron(evm_address: str, output_format: str = "base58") -> str:
-    """Convert EVM address to TRON format.
+    """Convert EVM address to alternative format.
 
     Args:
         evm_address: EVM address with or without '0x' prefix
         output_format: Output format, either 'base58' or 'hex'
 
     Returns:
-        str: TRON address in specified format
+        str: Address in specified format
 
     Raises:
         ValueError: If the address format is invalid or output_format is invalid
@@ -105,16 +105,16 @@ def evm_to_tron(evm_address: str, output_format: str = "base58") -> str:
     if output_format not in ["base58", "hex"]:
         raise ValueError("output_format must be 'base58' or 'hex'")
 
-    # 规范化EVM地址
+    # Normalize EVM address
     evm_address = normalize_evm_address(evm_address)
 
-    # 添加41前缀
+    # Add specific prefix
     tron_hex = "41" + evm_address
 
     if output_format == "hex":
         return tron_hex
 
-    # 转换为Base58Check格式
+    # Convert to Base58Check format
     try:
         address_bytes = bytes.fromhex(tron_hex)
         base58check = b58encode_check(address_bytes)
@@ -124,10 +124,10 @@ def evm_to_tron(evm_address: str, output_format: str = "base58") -> str:
 
 
 def tron_to_evm(tron_address: str, add_prefix: bool = True) -> str:
-    """Convert TRON address to EVM format.
+    """Convert address from alternative format to EVM format.
 
     Args:
-        tron_address: TRON address in Base58Check format or hex format
+        tron_address: Address in Base58Check format or hex format
         add_prefix: Whether to add '0x' prefix to the result
 
     Returns:
@@ -142,10 +142,10 @@ def tron_to_evm(tron_address: str, add_prefix: bool = True) -> str:
     if not tron_address or tron_address.isspace():
         raise ValueError("Empty address")
 
-    # 处理Base58Check格式
+    # Handle Base58Check format
     if tron_address.startswith("T"):
         if not validate_tron_base58_address(tron_address):
-            raise ValueError("Invalid TRON Base58Check address")
+            raise ValueError("Invalid Base58Check address")
 
         try:
             address_bytes = b58decode_check(tron_address)
@@ -153,13 +153,13 @@ def tron_to_evm(tron_address: str, add_prefix: bool = True) -> str:
         except Exception as e:
             raise ValueError(f"Failed to decode Base58Check address: {str(e)}")
     else:
-        # 处理Hex格式
+        # Handle Hex format
         if not validate_tron_hex_address(tron_address):
-            raise ValueError("Invalid TRON hex address")
+            raise ValueError("Invalid hex address")
 
         tron_hex = tron_address.lower().replace("0x", "").strip()
 
-    # 移除41前缀
+    # Remove prefix
     evm_address = tron_hex[2:]
 
     return f"0x{evm_address}" if add_prefix else evm_address
@@ -185,12 +185,12 @@ def get_address_type(address: str) -> Optional[str]:
         # Remove 0x prefix for consistent checking
         norm_address = address.lower().replace("0x", "").strip()
 
-        # Check if it's a TRON hex address first
+        # Check if it's a hex address with specific prefix
         if norm_address.startswith("41") and len(norm_address) == 42:
             if validate_tron_hex_address(norm_address):
                 return "tron_hex"
 
-        # Check if it's a TRON Base58Check address
+        # Check if it's a Base58Check address
         if validate_tron_base58_address(address):
             return "tron_base58"
 
@@ -205,16 +205,16 @@ def get_address_type(address: str) -> Optional[str]:
     return None
 
 
-# 测试用例
+# Test cases
 if __name__ == "__main__":
     test_cases = [
-        "0x123456789abcdef123456789abcdef123456789a",  # 标准EVM地址
-        "123456789ABCDEF123456789ABCDEF123456789A",  # 大写无前缀EVM地址
-        "TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW",  # Base58Check地址
-        "4154fdaf1515acfd32744cc33935817ff4d383e31f",  # Hex格式波场地址
-        "0x4154fdaf1515acfd32744cc33935817ff4d383e31f",  # 带0x的Hex格式波场地址
-        "invalid_address",  # 无效地址
-        "",  # 空地址
+        "0x123456789abcdef123456789abcdef123456789a",  # Standard EVM address
+        "123456789ABCDEF123456789ABCDEF123456789A",  # Uppercase EVM address without prefix
+        "TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW",  # Base58Check address
+        "4154fdaf1515acfd32744cc33935817ff4d383e31f",  # Hex format address
+        "0x4154fdaf1515acfd32744cc33935817ff4d383e31f",  # Hex format with 0x prefix
+        "invalid_address",  # Invalid address
+        "",  # Empty address
     ]
 
     print("Testing address type detection and conversions:")
@@ -227,20 +227,20 @@ if __name__ == "__main__":
             if addr_type in ["evm"]:
                 tron_base58 = evm_to_tron(addr, "base58")
                 tron_hex = evm_to_tron(addr, "hex")
-                print(f"EVM -> TRON Base58: {tron_base58}")
-                print(f"EVM -> TRON Hex: {tron_hex}")
+                print(f"EVM -> Base58: {tron_base58}")
+                print(f"EVM -> Hex: {tron_hex}")
 
-                # 验证反向转换
+                # Verify reverse conversion
                 evm_back = tron_to_evm(tron_base58)
-                print(f"TRON -> EVM: {evm_back}")
+                print(f"Base58 -> EVM: {evm_back}")
 
             elif addr_type in ["tron_base58", "tron_hex"]:
                 evm = tron_to_evm(addr)
-                print(f"TRON -> EVM: {evm}")
+                print(f"Alt -> EVM: {evm}")
 
-                # 验证反向转换
+                # Verify reverse conversion
                 tron_back = evm_to_tron(evm)
-                print(f"EVM -> TRON: {tron_back}")
+                print(f"EVM -> Alt: {tron_back}")
 
         except ValueError as e:
             print(f"Error: {str(e)}")
