@@ -23,6 +23,9 @@ wheels/
 # Virtual Environment
 venv/
 .venv/
+
+# macOS
+.DS_Store
 ENV/
 env/
 
