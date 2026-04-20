@@ -27,4 +27,18 @@ dependencies = [
 
 [project.urls]
 "Homepage" = "https://github.com/dongzhenye/address-converter"
-"Bug Tracker" = "https://github.com/dongzhenye/address-converter/issues" 
+"Bug Tracker" = "https://github.com/dongzhenye/address-converter/issues"
+
+[dependency-groups]
+dev = ["pytest>=7"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+[tool.ruff]
+target-version = "py38"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82", "I"]
